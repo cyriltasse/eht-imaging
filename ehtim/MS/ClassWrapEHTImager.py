@@ -1,12 +1,14 @@
 import numpy as np
 import ehtim as EHT
 import DDFacet.Data.ClassMS
+import pyfits
 
 class ClassWrapEHTImager():
     def __init__(self,**kwargs):
         for key, value in kwargs.items(): setattr(self, key, value)
         self.ReadVisData()
         self.ReadFITSImage()
+        self.MakeOBS()
 
     def ReadVisData(self):
         DicoSelectOptions={"FlagAnts":self.FlagAnts.split(",")}
@@ -28,11 +30,26 @@ class ClassWrapEHTImager():
                 x,y,z=self.MS.SelectedStationPos[iAnt]
                 f.write('%s %f %f %f   1.0001 1.0001 1 -1 0 0 0 0 0\n' % (AntName, x, y, z))
         self.EHT_Array = EHT.array.load_txt(ArrayTXTName)
-        stop
+
+
 
 
     def ReadFITSImage(self):
-        self.EHT_im = EHT.image.load_fits(self.FITSName)
+        self.EHT_im_prior = EHT.image.load_fits(self.FITSName)
+
+    def MakeOBS(self):
+        self.EHT_obs = self.EHT_im_prior.observe(self.EHT_Array,10.0,100.0,0.0,12.0,1.0E6, add_th_noise=False)
+        stop
+
+
+    def main(self):
+        map1 = EHT.imager_func(obs,gaussprior,gaussprior,1.0,d1='amp',d2='cphase',s1='gs',maxit=1000)
+        res = obs.res()
+        map1blur = map1.blur_gauss((res, res, 0.0),0.7)
+        map2 = EHT.imager_func(obs,map1blur,map1blur,1.0,d1='amp',d2='cphase',s1='gs',maxit=300)
+        map2blur = map2.blur_gauss((res, res, 0.0),0.5)
+
+
 
 #     def Read
 

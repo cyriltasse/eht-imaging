@@ -154,7 +154,10 @@ def load_im_fits(filename, punit="deg", pulse=PULSE_DEFAULT):
     mjd = int(mjd_float)
     time = (mjd_float - mjd) * 24
 
-    if 'FREQ' in list(header.keys()): rf = header['FREQ']
+    if 'FREQ' in list(header.keys()):
+        rf = header['FREQ']
+    elif 'CTYPE4' in list(header.keys()) and header['CTYPE4']=="FREQ":
+        rf = header['CRVAL4']
     else: rf = 0.
 
     if 'OBJECT' in list(header.keys()): src = header['OBJECT']
