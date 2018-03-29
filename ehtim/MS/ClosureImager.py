@@ -7,7 +7,7 @@ import ClassWrapEHTImager
 import pickle
 
 def read_options():
-    desc="""Run MCMC """
+    desc="""Run EHT imager"""
     
     opt = optparse.OptionParser(usage='Usage: %prog <options>',version='%prog version 1.0',description=desc)
     
