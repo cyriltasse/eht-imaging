@@ -69,20 +69,24 @@ class ClassWrapEHTImager():
         tstart=0.
         tstop=self.TObs
         bw=1e6
-        self.EHT_obs = self.EHT_Array.obsdata(self.EHT_im_prior.ra, self.EHT_im_prior.dec, self.EHT_im_prior.rf, 
-                                              bw, tint, tadv, tstart, tstop, 
-                                              mjd=0,tau=0.1, timetype="UTC", elevmin=0., elevmax=90., fix_theta_GMST = False)
+        # self.EHT_obs = self.EHT_Array.obsdata(self.EHT_im_prior.ra, self.EHT_im_prior.dec, self.EHT_im_prior.rf, 
+        #                                      bw, tint, tadv, tstart, tstop, 
+        #                                      mjd=0,tau=0.1, timetype="UTC", elevmin=0., elevmax=90., fix_theta_GMST = False)
+
+        self.EHT_obs = self.EHT_im_prior.observe (self.EHT_Array,tint, tadv, tstart, tstop,bw, add_th_noise=False)
 
         self.EHTdata=self.EHT_obs.data.view(np.recarray)
         u,v,w=self.DATA["uvw"].T
         self.EHTdata.u=u
         self.EHTdata.v=v
         self.EHTdata.t0=np.array(self.MS.StationNames)[self.DATA["A0"]]
-        self.EHTdata.t1=np.array(self.MS.StationNames)[self.DATA["A0"]]
+        self.EHTdata.t1=np.array(self.MS.StationNames)[self.DATA["A1"]]
         self.EHTdata.time=self.DATA["times"]
         self.EHTdata.tint=self.MS.dt
         self.EHTdata.vis=self.DATA["data"][:,0,0]
-        
+        #self.EHTdata.vis.fill(1)
+        n=self.EHTdata.vis.size
+        self.EHTdata.vis+=1e-4*(np.random.randn(n)+1j*np.random.randn(n))
 
     def main(self):
         map1 = EHT.imager_func(self.EHT_obs,self.EHT_im_prior,self.EHT_im_prior,1.0,d1='amp',d2='cphase',s1='gs',maxit=1000)

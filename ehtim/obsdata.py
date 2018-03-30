@@ -1213,7 +1213,7 @@ class Obsdata(object):
             sys.stdout.write('\rGetting bispectra: type: %s count: %s scan %i/%i ' % (vtype, count, tt, len(tlist)))
 
             tt += 1
-
+            
             time = tdata[0]['time']
             if timetype in ['GMST','gmst'] and self.timetype=='UTC':
                 time = utc_to_gmst(time, self.mjd)
@@ -1294,6 +1294,7 @@ class Obsdata(object):
            Returns:
                (numpy.recarry): A recarray of the closure phases with datatype DTPHASE
         """
+        
         if timetype==False:
             timetype=self.timetype
         if not mode in ('time', 'all'):
