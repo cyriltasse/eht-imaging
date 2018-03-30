@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 import numpy as np
 import optparse
-from DDFacet.Other import MyLogger
-log = MyLogger.getLogger("ClosureImager")
 import ClassWrapEHTImager
 import pickle
 
@@ -32,7 +30,7 @@ def main(options=None):
         options = pickle.load(f)
     
     MM=ClassWrapEHTImager.ClassWrapEHTImager(**options.__dict__)
-
+    MM.main()
 
 if __name__=="__main__":
     OP=read_options()

@@ -2,6 +2,8 @@ import numpy as np
 import ehtim as EHT
 import DDFacet.Data.ClassMS
 import pyfits
+from DDFacet.Other import MyLogger
+log = MyLogger.getLogger("ClosureImager")
 
 class ClassWrapEHTImager():
     def __init__(self,**kwargs):
@@ -11,42 +13,64 @@ class ClassWrapEHTImager():
         self.MakeOBS()
 
     def ReadVisData(self):
+        print>>log,"Reading MS metadata"
         DicoSelectOptions={"FlagAnts":self.FlagAnts.split(",")}
         self.MS = DDFacet.Data.ClassMS.ClassMS(self.MSName, 
                                                Col=self.ColName,
                                                DoReadData=False,
                                                DicoSelectOptions=DicoSelectOptions,
                                                AverageTimeFreq=None)
-        
+        print self.MS
+
         
         DATA = {}
         DATA["iMS"]    = 0
         DATA["iChunk"] = 0
+
+        print>>log,"Reading MS visibilities"
         self.MS.GiveChunk(DATA, 0)
+
+        print>>log,"Selected stations:"
+        print>>log,"  %s"%str(self.MS.SelectedStationNames)
+
+        self.TObs=self.MS.DTs+self.MS.dt
+        print>>log,"Generating array info (%i stations)"%len(self.MS.SelectedStationNames)
         ArrayTXTName='%s.ArrayPos.txt'%self.MSName
         with open(ArrayTXTName,'w') as f:
             f.write('#NAME X   Y  Z  SEFDR SEFDL FR_PAR_ANGLE FR_ELEV_ANGLE FR_OFFSET[d] DR_RE   DR_IM   DL_RE    DL_IM \n')
             for iAnt,AntName in enumerate(self.MS.SelectedStationNames):
                 x,y,z=self.MS.SelectedStationPos[iAnt]
                 f.write('%s %f %f %f   1.0001 1.0001 1 -1 0 0 0 0 0\n' % (AntName, x, y, z))
-        self.EHT_Array = EHT.array.load_txt(ArrayTXTName)
+
+        #self.EHT_Array = EHT.array.load_txt(ArrayTXTName)
+        self.EHT_Array = EHT.array.load_txt("LOFAR4.txt")
 
 
 
 
     def ReadFITSImage(self):
+        print>>log,"Read fits image %s"%self.FITSName
         self.EHT_im_prior = EHT.image.load_fits(self.FITSName)
 
     def MakeOBS(self):
+        print>>log,"Generate observation"
         self.EHT_obs = self.EHT_im_prior.observe(self.EHT_Array,10.0,100.0,0.0,12.0,1.0E6, add_th_noise=False)
-        stop
+        #self.TObs=self.MS.DTs+self.MS.dt
+        #tint, tadv, tstart, tstop, bw,
 
+        u=self.EHT_obs.data["u"]
+        v=self.EHT_obs.data["v"]
+        import pylab
+        pylab.clf()
+        pylab.scatter(u,v)
+        pylab.draw()
+        pylab.show()
 
     def main(self):
-        map1 = EHT.imager_func(obs,gaussprior,gaussprior,1.0,d1='amp',d2='cphase',s1='gs',maxit=1000)
-        res = obs.res()
+        map1 = EHT.imager_func(self.EHT_obs,self.EHT_im_prior,self.EHT_im_prior,1.0,d1='amp',d2='cphase',s1='gs',maxit=1000)
+        res = self.EHT_obs.res()
         map1blur = map1.blur_gauss((res, res, 0.0),0.7)
-        map2 = EHT.imager_func(obs,map1blur,map1blur,1.0,d1='amp',d2='cphase',s1='gs',maxit=300)
+        map2 = EHT.imager_func(self.EHT_obs,map1blur,map1blur,1.0,d1='amp',d2='cphase',s1='gs',maxit=300)
         map2blur = map2.blur_gauss((res, res, 0.0),0.5)
 
 
