@@ -29,6 +29,15 @@ class ClassWrapEHTImager():
 
         print>>log,"Reading MS visibilities"
         self.MS.GiveChunk(DATA, 0)
+        f=DATA["flags"]
+        frow=np.all(np.all(f,axis=-1),axis=-1)
+        DATA["flags"]=DATA["flags"][frow==0,:,:]
+        DATA["data"]=DATA["data"][frow==0,:,:]
+        DATA["A0"]=DATA["A0"][frow==0]
+        DATA["A1"]=DATA["A1"][frow==0]
+        DATA["times"]=DATA["times"][frow==0]
+        DATA["uvw"]=DATA["uvw"][frow==0]
+        self.DATA=DATA
 
         print>>log,"Selected stations:"
         print>>log,"  %s"%str(self.MS.SelectedStationNames)
@@ -42,8 +51,8 @@ class ClassWrapEHTImager():
                 x,y,z=self.MS.SelectedStationPos[iAnt]
                 f.write('%s %f %f %f   1.0001 1.0001 1 -1 0 0 0 0 0\n' % (AntName, x, y, z))
 
-        #self.EHT_Array = EHT.array.load_txt(ArrayTXTName)
-        self.EHT_Array = EHT.array.load_txt("LOFAR4.txt")
+        self.EHT_Array = EHT.array.load_txt(ArrayTXTName)
+        #self.EHT_Array = EHT.array.load_txt("LOFAR4.txt")
 
 
 
@@ -54,17 +63,26 @@ class ClassWrapEHTImager():
 
     def MakeOBS(self):
         print>>log,"Generate observation"
-        self.EHT_obs = self.EHT_im_prior.observe(self.EHT_Array,10.0,100.0,0.0,12.0,1.0E6, add_th_noise=False)
-        #self.TObs=self.MS.DTs+self.MS.dt
-        #tint, tadv, tstart, tstop, bw,
+        self.TObs=(self.MS.DTs+self.MS.dt)/3600.
+        tint=self.MS.dt
+        tadv=self.MS.dt
+        tstart=0.
+        tstop=self.TObs
+        bw=1e6
+        self.EHT_obs = self.EHT_Array.obsdata(self.EHT_im_prior.ra, self.EHT_im_prior.dec, self.EHT_im_prior.rf, 
+                                              bw, tint, tadv, tstart, tstop, 
+                                              mjd=0,tau=0.1, timetype="UTC", elevmin=0., elevmax=90., fix_theta_GMST = False)
 
-        u=self.EHT_obs.data["u"]
-        v=self.EHT_obs.data["v"]
-        import pylab
-        pylab.clf()
-        pylab.scatter(u,v)
-        pylab.draw()
-        pylab.show()
+        self.EHTdata=self.EHT_obs.data.view(np.recarray)
+        u,v,w=self.DATA["uvw"].T
+        self.EHTdata.u=u
+        self.EHTdata.v=v
+        self.EHTdata.t0=np.array(self.MS.StationNames)[self.DATA["A0"]]
+        self.EHTdata.t1=np.array(self.MS.StationNames)[self.DATA["A0"]]
+        self.EHTdata.time=self.DATA["times"]
+        self.EHTdata.tint=self.MS.dt
+        self.EHTdata.vis=self.DATA["data"][:,0,0]
+        
 
     def main(self):
         map1 = EHT.imager_func(self.EHT_obs,self.EHT_im_prior,self.EHT_im_prior,1.0,d1='amp',d2='cphase',s1='gs',maxit=1000)

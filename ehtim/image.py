@@ -424,6 +424,7 @@ class Image(object):
         obs = array.obsdata(self.ra, self.dec, self.rf, bw, tint, tadv, tstart, tstop, mjd=mjd,
                             tau=tau, timetype=timetype, elevmin=elevmin, elevmax=elevmax, fix_theta_GMST = fix_theta_GMST)
 
+        
         # Observe on the same baselines as the empty observation and add noise
         obs = self.observe_same(obs, ttype=ttype, fft_pad_factor=fft_pad_factor, sgrscat=sgrscat, add_th_noise=add_th_noise,
                                      opacitycal=opacitycal,ampcal=ampcal,phasecal=phasecal,dcal=dcal,frcal=frcal,
