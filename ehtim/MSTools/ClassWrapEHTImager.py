@@ -75,8 +75,13 @@ class ClassWrapEHTImager():
 
         self.EHT_obs = self.EHT_im_prior.observe (self.EHT_Array,tint, tadv, tstart, tstop,bw, add_th_noise=False)
 
-        self.EHTdata=self.EHT_obs.data.view(np.recarray)
+        self.EHTdata0=self.EHT_obs.data.view(np.recarray)
+        self.EHTdata0.sigma=1e10
         u,v,w=self.DATA["uvw"].T
+        self.EHTdata=self.EHTdata0[0:u.size]
+        #A=np.zeros((u.size,),dtype=self.EHTdata.dtype)
+        #A=A.view(np.recarray)
+        #self.EHTdata=self.EHT_obs.data=A
         self.EHTdata.u=u
         self.EHTdata.v=v
         self.EHTdata.t0=np.array(self.MS.StationNames)[self.DATA["A0"]]
@@ -84,6 +89,17 @@ class ClassWrapEHTImager():
         self.EHTdata.time=self.DATA["times"]
         self.EHTdata.tint=self.MS.dt
         self.EHTdata.vis=self.DATA["data"][:,0,0]
+        self.EHTdata.sigma=1.
+        f=self.DATA["flags"][:,0,0]
+        self.EHTdata.sigma[f]=1e10
+        # self.EHTdata.u=u
+        # self.EHTdata.v=v
+        # self.EHTdata.t0=np.array(self.MS.StationNames)[self.DATA["A0"]]
+        # self.EHTdata.t1=np.array(self.MS.StationNames)[self.DATA["A1"]]
+        # self.EHTdata.time=self.DATA["times"]
+        # self.EHTdata.tint=self.MS.dt
+        # self.EHTdata.vis=self.DATA["data"][:,0,0]
+
         #self.EHTdata.vis.fill(1)
         n=self.EHTdata.vis.size
         self.EHTdata.vis+=1e-4*(np.random.randn(n)+1j*np.random.randn(n))
@@ -92,7 +108,8 @@ class ClassWrapEHTImager():
         map1 = EHT.imager_func(self.EHT_obs,self.EHT_im_prior,self.EHT_im_prior,1.0,d1='amp',d2='cphase',s1='gs',maxit=1000)
         res = self.EHT_obs.res()
         map1blur = map1.blur_gauss((res, res, 0.0),0.7)
-        map2 = EHT.imager_func(self.EHT_obs,map1blur,map1blur,1.0,d1='amp',d2='cphase',s1='gs',maxit=300)
+        #map2 = EHT.imager_func(self.EHT_obs,map1blur,map1blur,1.0,d1='amp',d2='cphase',s1='gs',maxit=300)
+        map2 = EHT.imager_func(self.EHT_obs,map1blur,map1blur,1.0,d1='bs',d2='cphase',s1='gs',maxit=300)
         map2blur = map2.blur_gauss((res, res, 0.0),0.5)
 
 

@@ -13,7 +13,7 @@ def read_options():
     group.add_option('--MSName',type=str,help='',default=None)
     group.add_option('--ColName',type=str,help="",default='DATA')
     group.add_option('--FITSName',type=str,help="",default=None)
-    group.add_option('--FlagAnts',type=str,help="Default is %default",default="CS,RS1,RS2,RS3,RS4")
+    group.add_option('--FlagAnts',type=str,help="Default is %default",default="CS,RS1,RS2,RS3")
     
     opt.add_option_group(group)
     options, arguments = opt.parse_args()
